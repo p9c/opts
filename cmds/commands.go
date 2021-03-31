@@ -5,10 +5,11 @@ type Commands []Command
 
 // Command is a specification for a command and can include any number of subcommands
 type Command struct {
-	Name        string
-	Description string
-	Entrypoint  func(c interface{}) error
-	Commands    Commands
+	Name          string
+	Description   string
+	Documentation string
+	Entrypoint    func(c interface{}) error
+	Commands      Commands
 }
 
 // GetAllCommands returns all of the available command names
@@ -73,7 +74,10 @@ func (c Commands) ForEach(fn func(Command) bool, hereDepth, hereDist int) (ret b
 	dist = hereDist
 	for i := range c {
 		T.Ln(tabs[:depth]+"walking", c[i].Name, depth, dist)
-		
+		if !fn(c[i]) {
+			// if the closure returns false break out of the loop
+			return
+		}
 	}
 	T.Ln(tabs[:hereDepth]+"<-", hereDepth)
 	depth--
