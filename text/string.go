@@ -81,7 +81,7 @@ func (x *Opt) V() string {
 
 // Empty returns true if the string is empty
 func (x *Opt) Empty() bool {
-	return len(x.Value.Load().(string)) == 0
+	return len(x.Value.Load().([]byte)) == 0
 }
 
 // Bytes returns the raw bytes in the underlying storage
