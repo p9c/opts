@@ -42,7 +42,7 @@ func (x *Opt) GetMetadata() *meta.Data {
 // ReadInput sets the value from a string
 func (x *Opt) ReadInput(input string) (o opt.Option, e error) {
 	if input == "" {
-		e = fmt.Errorf("integer number opt %s %v may not be empty", x.Name(), x.Data.Aliases)
+		e = fmt.Errorf("duration opt %s %v may not be empty", x.Name(), x.Data.Aliases)
 		return
 	}
 	if strings.HasPrefix(input, "=") {
@@ -81,9 +81,16 @@ func (x *Opt) V() time.Duration {
 	return x.Value.Load()
 }
 
+func (x *Opt) runHooks() {
+	for i := range x.hook {
+		x.hook[i](x.V())
+	}
+}
+
 // Set the value stored
 func (x *Opt) Set(d time.Duration) *Opt {
 	x.Value.Store(d)
+	x.runHooks()
 	return x
 }
 

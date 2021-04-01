@@ -61,21 +61,7 @@ func (x *Opt) ReadInput(input string) (o opt.Option, e error) {
 
 // LoadInput sets the value from a string. For this opt this means appending to the list
 func (x *Opt) LoadInput(input string) (o opt.Option, e error) {
-	if input == "" {
-		e = fmt.Errorf("string opt %s %v may not be empty", x.Name(), x.Data.Aliases)
-		return
-	}
-	if strings.HasPrefix(input, "=") {
-		input = strings.Join(strings.Split(input, "=")[1:], "=")
-	}
-	var slice []string
-	// if value has a comma in it, it's a list of items, so split them and join them
-	if strings.Contains(input, ",") {
-		x.Set(append(slice, strings.Split(input, ",")...))
-	} else {
-		x.Set(append(slice, input))
-	}
-	return x, e
+	return x.ReadInput(input)
 }
 
 // Name returns the name of the opt
@@ -103,9 +89,16 @@ func (x *Opt) Len() int {
 	return len(x.S())
 }
 
+func (x *Opt) runHooks() {
+	for i := range x.hook {
+		x.hook[i](x.V())
+	}
+}
+
 // Set the slice of strings stored
 func (x *Opt) Set(ss []string) *Opt {
 	x.value.Store(ss)
+	x.runHooks()
 	return x
 }
 

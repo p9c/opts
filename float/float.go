@@ -83,9 +83,16 @@ func (x *Opt) V() float64 {
 	return x.Value.Load()
 }
 
+func (x *Opt) runHooks() {
+	for i := range x.hook {
+		x.hook[i](x.V())
+	}
+}
+
 // Set the value stored
 func (x *Opt) Set(f float64) *Opt {
 	x.Value.Store(f)
+	x.runHooks()
 	return x
 }
 

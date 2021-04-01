@@ -97,9 +97,16 @@ func (x *Opt) Flip() {
 	x.value.Toggle()
 }
 
+func (x *Opt) runHooks() {
+	for i := range x.hook {
+		x.hook[i](x.True())
+	}
+}
+
 // Set changes the value currently stored
 func (x *Opt) Set(b bool) *Opt {
 	x.value.Store(b)
+	x.runHooks()
 	return x
 }
 

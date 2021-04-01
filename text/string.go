@@ -54,7 +54,7 @@ func (x *Opt) ReadInput(input string) (o opt.Option, e error) {
 	return x, e
 }
 
-// LoadInput sets the value from a string (this is the same as the above but differs for Strings)
+// LoadInput sets the value from a string
 func (x *Opt) LoadInput(input string) (o opt.Option, e error) {
 	return x.ReadInput(input)
 }
@@ -89,14 +89,22 @@ func (x *Opt) Bytes() []byte {
 	return x.Value.Load().([]byte)
 }
 
+func (x *Opt) runHooks() {
+	for i := range x.hook {
+		x.hook[i](x.V())
+	}
+}
+
 // Set the value stored
 func (x *Opt) Set(s string) *Opt {
+	x.runHooks()
 	x.Value.Store([]byte(s))
 	return x
 }
 
 // SetBytes sets the string from bytes
 func (x *Opt) SetBytes(s []byte) *Opt {
+	x.runHooks()
 	x.Value.Store(s)
 	return x
 }
