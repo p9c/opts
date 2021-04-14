@@ -1,4 +1,4 @@
-package float
+package sanitizers
 
 import (
 	"github.com/p9c/log"

@@ -10,10 +10,11 @@ type (
 		Description   string
 		Documentation string
 		Type          string
-		Widget        string
-		Options       []string
-		OmitEmpty     bool
-		Name          string
+		// Widget        string
+		Options     []string
+		OmitEmpty   bool
+		Name        string
+		DefaultPort int
 	}
 )
 

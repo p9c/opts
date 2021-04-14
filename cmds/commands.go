@@ -10,6 +10,19 @@ type Command struct {
 	Documentation string
 	Entrypoint    func(c interface{}) error
 	Commands      Commands
+	Colorizer     func(a ...interface{}) string
+	AppText       string
+	Parent        *Command
+}
+
+func (c Commands) PopulateParents(parent *Command) {
+	if parent != nil {
+		I.Ln("backlinking children of", parent.Name)
+	}
+	for i := range c {
+		c[i].Parent = parent
+		c[i].Commands.PopulateParents(&c[i])
+	}
 }
 
 // GetAllCommands returns all of the available command names

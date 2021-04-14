@@ -1,4 +1,4 @@
-package float
+package normalize
 
 import (
 	"github.com/p9c/log"

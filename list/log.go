@@ -2,7 +2,8 @@ package list
 
 import (
 	"github.com/p9c/log"
-	"github.com/p9c/pod/version"
+
+	"github.com/p9c/opts/version"
 )
 
 var subsystem = log.AddLoggerSubsystem(version.PathBase)
@@ -11,10 +12,10 @@ var F, E, W, I, D, T log.LevelPrinter = log.GetLogPrinterSet(subsystem)
 func init() {
 	// to filter out this package, uncomment the following
 	// var _ = logg.AddFilteredSubsystem(subsystem)
-	
+
 	// to highlight this package, uncomment the following
 	// var _ = logg.AddHighlightedSubsystem(subsystem)
-	
+
 	// these are here to test whether they are working
 	// F.Ln("F.Ln")
 	// E.Ln("E.Ln")

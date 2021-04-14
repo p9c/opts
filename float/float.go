@@ -3,25 +3,39 @@ package float
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/p9c/opts/meta"
-	"github.com/p9c/opts/opt"
-	
-	uberatomic "go.uber.org/atomic"
 	"strconv"
 	"strings"
+
+	"github.com/p9c/opts/meta"
+	"github.com/p9c/opts/opt"
+	"github.com/p9c/opts/sanitizers"
+
+	uberatomic "go.uber.org/atomic"
 )
 
 // Opt stores an float64 configuration value
 type Opt struct {
 	meta.Data
-	hook  []func(f float64)
-	Value *uberatomic.Float64
-	Def   float64
+	hook     []Hook
+	Min, Max float64
+	clamp    func(input float64) (result float64)
+	Value    *uberatomic.Float64
+	Def      float64
 }
 
-// NewFloat returns a new Opt value set to a default value
-func NewFloat(m meta.Data, def float64) *Opt {
-	return &Opt{Value: uberatomic.NewFloat64(def), Data: m, Def: def}
+type Hook func(f float64) error
+
+// New returns a new Opt value set to a default value
+func New(m meta.Data, def float64, min, max float64, hook ...Hook) *Opt {
+	return &Opt{
+		Value: uberatomic.NewFloat64(def),
+		Data:  m,
+		Def:   def,
+		Min:   min,
+		Max:   max,
+		hook:  hook,
+		clamp: sanitizers.ClampFloat(min, max),
+	}
 }
 
 // SetName sets the name for the generator
@@ -47,14 +61,15 @@ func (x *Opt) ReadInput(input string) (o opt.Option, e error) {
 		return
 	}
 	if strings.HasPrefix(input, "=") {
-		// the following removes leading and trailing characters
+		// the following removes leading and trailing '='
 		input = strings.Join(strings.Split(input, "=")[1:], "=")
 	}
 	var v float64
 	if v, e = strconv.ParseFloat(input, 64); E.Chk(e) {
 		return
 	}
-	x.Value.Store(v)
+	if e = x.Set(v); E.Chk(e) {
+	}
 	return x, e
 }
 
@@ -69,12 +84,12 @@ func (x *Opt) Name() string {
 }
 
 // AddHooks appends callback hooks to be run when the value is changed
-func (x *Opt) AddHooks(hook ...func(f float64)) {
+func (x *Opt) AddHooks(hook ...Hook) {
 	x.hook = append(x.hook, hook...)
 }
 
 // SetHooks sets a new slice of hooks
-func (x *Opt) SetHooks(hook ...func(f float64)) {
+func (x *Opt) SetHooks(hook ...Hook) {
 	x.hook = hook
 }
 
@@ -83,17 +98,22 @@ func (x *Opt) V() float64 {
 	return x.Value.Load()
 }
 
-func (x *Opt) runHooks() {
+func (x *Opt) runHooks(f float64) (e error) {
 	for i := range x.hook {
-		x.hook[i](x.V())
+		if e = x.hook[i](f); E.Chk(e) {
+			break
+		}
 	}
+	return
 }
 
 // Set the value stored
-func (x *Opt) Set(f float64) *Opt {
-	x.Value.Store(f)
-	x.runHooks()
-	return x
+func (x *Opt) Set(f float64) (e error) {
+	f = x.clamp(f)
+	if e = x.runHooks(f); !E.Chk(e) {
+		x.Value.Store(f)
+	}
+	return
 }
 
 // String returns a string representation of the value
@@ -111,6 +131,6 @@ func (x *Opt) MarshalJSON() (b []byte, e error) {
 func (x *Opt) UnmarshalJSON(data []byte) (e error) {
 	v := x.Value.Load()
 	e = json.Unmarshal(data, &v)
-	x.Value.Store(v)
+	e = x.Set(v)
 	return
 }
