@@ -14,9 +14,12 @@ type Command struct {
 
 // GetAllCommands returns all of the available command names
 func (c Commands) GetAllCommands() (o []string) {
-	for i := range c {
-		o = append(o, c[i].Commands.GetAllCommands()...)
-	}
+	c.ForEach(func(cm Command) bool {
+		o = append(o, cm.Name)
+		o = append(o, cm.Commands.GetAllCommands()...)
+		return true
+	}, 0, 0,
+	)
 	return
 }
 
